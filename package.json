@@ -4,6 +4,9 @@
   "description": "",
   "main": "index.js",
   "type": "module",
+  "compilerOptions": {
+    "esModuleInterop": true
+  },
   "scripts": {
     "dev": "nodemon ./src/app.ts",
     "start": "node ./src/app.ts"
