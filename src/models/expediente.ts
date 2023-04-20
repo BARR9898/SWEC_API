@@ -1,5 +1,6 @@
 import {Schema,Types,model,Models} from "mongoose"
 import { Expediente } from "../interfaces/expediente.interface";
+import { Citas } from "../interfaces/citas.interface";
 
 const ExpedienteSchema = new Schema<Expediente>(
     {
@@ -153,8 +154,12 @@ const ExpedienteSchema = new Schema<Expediente>(
         type:[JSON],
         required: true
       },
+      expediente_id:{
+        type: Number,
+        required: true
+      },
       citas:{
-        type:[JSON],
+        type:Array<Citas>,
         required: true
       }
 

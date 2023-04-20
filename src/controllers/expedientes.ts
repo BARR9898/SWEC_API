@@ -51,7 +51,6 @@ const updateExpediente = async ( {params,body} :Request,res:Response) => {
             result:true,
             data: e
         })
-        handleHttp(res,'ERROR_UPDATE_ITEM');
     }
 }
 
