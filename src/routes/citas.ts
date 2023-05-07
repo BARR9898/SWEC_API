@@ -1,7 +1,10 @@
 import { Request,Response,Router } from "express";
 import { getExpediente , getExpedientes , updateExpediente , deleteExpediente , postExpediente} from "../controllers/expedientes";
+import { postCita,getAllCitas,getCita,updateCita,deleteCita,getAllCitas_agenda} from "../controllers/citas";
+
 import { logMiddleware } from "../middleware/log";
 import { checkJWT } from "../middleware/session";
+import { updateDate } from "../services/citas";
 
 const router = Router();
 
@@ -11,11 +14,12 @@ const router = Router();
 */
 
 
-router.get("/"  ,getExpedientes);
-router.get("/:id" , logMiddleware, getExpediente);
-router.post("/" , postExpediente);
-router.put("/:id" , updateExpediente);
-router.delete("/:id" , deleteExpediente);
+router.get("/all/:id" , getAllCitas);
+router.get("/agenda/" , getAllCitas_agenda);
+router.get("/:id" , getCita);
+router.post("/" , postCita );
+router.put("/:id" , updateCita);
+router.delete("/:id" , deleteCita);
 
 
 

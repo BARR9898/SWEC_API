@@ -1,12 +1,12 @@
 import { Request,response,Response } from "express"
-import { insertExpedient,deleteExpedient,getExpedient,getExpedients,updateExpedient} from "../services/expedientes";
+import { insertCita,selectDates,selectDate, updateDate, deleteDate , selectDates_agenda} from "../services/citas";
 import { handleHttp } from "../utils/error.handle";
 import ExpedienteModel from "../models/expediente";
-
-const getExpediente = async ({params} : Request,res:Response) => {
+/*
+const getCita = async ({params} : Request,res:Response) => {
     try {
         const {id} = params;
-        const response = await getExpedient(id);
+        const response = await getCitas(id);
         const data = response ? response: "NOT_FOUND"
         res.send({
             result:true,
@@ -55,8 +55,8 @@ const updateExpediente = async ( {params,body} :Request,res:Response) => {
     }
 }
 
-const postExpediente = async ({body} : Request,res:Response) => {
-        /*const isValidData = ValidateData(body);
+const postCita = async ({body} : Request,res:Response) => {
+        const isValidData = ValidateData(body);
         
         
         if (!isValidData) {
@@ -64,9 +64,8 @@ const postExpediente = async ({body} : Request,res:Response) => {
                 result:false,
                 data: "Información incompleta"
             })
-        }*/
-        const responseItem = await insertExpedient(body);
-
+        }
+        const responseItem = await insertCita(body);
         res.send({
             result: true,
             data:responseItem,
@@ -122,5 +121,131 @@ function ValidateData(data:any){
     }
 
 }
+*/
 
-export {getExpediente,getExpedientes,updateExpediente,deleteExpediente,postExpediente}
+const postCita = async ({body} : Request,res:Response) => {
+    /*const isValidData = ValidateData(body);
+    if (!isValidData) {
+        res.send({
+            result:false,
+            data: "Información incompleta"
+        })
+    }*/
+
+    const responseItem = await insertCita(body);
+    res.send({
+        result: true,
+        data:responseItem,
+        status: 200
+    }); 
+
+
+}
+
+
+const deleteCita = async ({params} : Request,res:Response) => {
+    try {
+        const {id} = params;
+        const responseItem = await deleteDate(id);
+        res.send({
+            result:true,
+            data:responseItem,
+            stauts:200
+        }); 
+        
+    } catch (e) {
+        res.send({
+            result:false,
+            data:e
+
+        })
+    }
+}
+
+const getAllCitas = async ({params,query}: Request,res:Response) => {
+    try {
+        
+        
+        const {id} = params;
+        //console.log('id',id);
+        console.log('query',query);
+        
+       const response = await selectDates(id,query);
+        const data = response ? response: "NOT_FOUND"
+        res.send({
+            result:true,
+            data:data,
+            status:200
+        });
+    } catch (e) {
+        res.send({
+            result:false,
+            data:e
+        })
+    }
+
+}
+
+const getAllCitas_agenda = async ({query}: Request,res:Response) => {
+    try {
+        
+        
+
+        console.log('query',query);
+        
+       const response = await selectDates_agenda(query);
+        const data = response ? response: "NOT_FOUND"
+        res.send({
+            result:true,
+            data:data,
+            status:200
+        });
+    } catch (e) {
+        res.send({
+            result:false,
+            data:e
+        })
+    }
+
+}
+
+const getCita = async ({params} : Request,res:Response) => {
+    try {
+        const {id} = params;
+        const response = await selectDate(id);
+        const data = response ? response: "NOT_FOUND"
+        res.send({
+            result:true,
+            data:data,
+            status:200
+        });
+    } catch (e) {
+        res.send({
+            result:false,
+            data:e
+        })
+    }
+
+}
+
+const updateCita = async ({params,body} : Request,res:Response) => {
+    try {
+        const {id} = params;
+     
+        
+        const response = await updateDate(id,body);
+        const data = response ? response: "NOT_FOUND"
+        res.send({
+            result:true,
+            data:data,
+            status:200
+        });
+    } catch (e) {
+        res.send({
+            result:false,
+            data:e
+        })
+    }
+
+}
+export {postCita,getAllCitas,getCita,updateCita,deleteCita,getAllCitas_agenda}
