@@ -401,7 +401,7 @@ async function DeleteExpedientes_Pacientes(expedienteId: number) {
 async function getAllExpedients(filtros:any){
     console.log('f',filtros);
     
-    const [rows]:any = await db.pool.query(`SELECT e.id,e.fecha_creacion, p.nombre, p.apellido_paterno, p.apellido_materno FROM pacientes p , expedientes e INNER JOIN expedientes_pacientes on expedientes_pacientes.id_expediente = e.id INNER JOIN pacientes on expedientes_pacientes.id_paciente = pacientes.id WHERE e.id = expedientes_pacientes.id_expediente AND p.id = expedientes_pacientes.id_paciente ${filtros.nombre} `)
+    const [rows]:any = await db.pool.query(`SELECT e.id,e.fecha_creacion, p.nombre, p.apellido_paterno, p.apellido_materno FROM pacientes p , expedientes e INNER JOIN expedientes_pacientes on expedientes_pacientes.id_expediente = e.id INNER JOIN pacientes on expedientes_pacientes.id_paciente = pacientes.id WHERE e.id = expedientes_pacientes.id_expediente AND p.id = expedientes_pacientes.id_paciente ${filtros.nombre} ${filtros.apellido_materno} ${filtros.apellido_paterno} `)
     console.log('rows',rows);
     
     return rows
