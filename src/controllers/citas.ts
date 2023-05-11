@@ -167,8 +167,6 @@ const getAllCitas = async ({params,query}: Request,res:Response) => {
         
         
         const {id} = params;
-        //console.log('id',id);
-        console.log('query',query);
         
        const response = await selectDates(id,query);
         const data = response ? response: "NOT_FOUND"
@@ -188,11 +186,7 @@ const getAllCitas = async ({params,query}: Request,res:Response) => {
 
 const getAllCitas_agenda = async ({query}: Request,res:Response) => {
     try {
-        
-        
-
-        console.log('query',query);
-        
+                
        const response = await selectDates_agenda(query);
         const data = response ? response: "NOT_FOUND"
         res.send({

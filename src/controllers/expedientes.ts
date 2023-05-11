@@ -1,5 +1,5 @@
 import { Request,response,Response } from "express"
-import { insertExpedient,deleteExpedient,getExpedient,getExpedients,updateExpedient} from "../services/expedientes";
+import { insertExpedient,deleteExpedient,getExpedient,getExpedients,updateExpedient,selectNextId} from "../services/expedientes";
 import { handleHttp } from "../utils/error.handle";
 import ExpedienteModel from "../models/expediente";
 
@@ -22,9 +22,28 @@ const getExpediente = async ({params} : Request,res:Response) => {
 
 }
 
+const getNextId = async (req: Request,res:Response) => {
+    try {
+        const response = await selectNextId();
+        const data = response ? response: "NOT_FOUND"
+        res.send({
+            result:true,
+            data:data,
+            status:200
+        });
+    } catch (e) {
+        res.send({
+            result:false,
+            data:e
+        })
+    }
+
+}
+
 const getExpedientes = async (req:Request,res:Response) => {
     try {
-        const response = await getExpedients();
+        const {query} = req
+        const response = await getExpedients(query);
         res.send({
             result:true,
             data:response,
@@ -123,4 +142,6 @@ function ValidateData(data:any){
 
 }
 
-export {getExpediente,getExpedientes,updateExpediente,deleteExpediente,postExpediente}
+
+
+export {getExpediente,getExpedientes,updateExpediente,deleteExpediente,postExpediente,getNextId}

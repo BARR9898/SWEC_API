@@ -1,5 +1,5 @@
 import { Request,Response,Router } from "express";
-import { getExpediente , getExpedientes , updateExpediente , deleteExpediente , postExpediente} from "../controllers/expedientes";
+import { getExpediente , getExpedientes , updateExpediente , deleteExpediente , postExpediente,getNextId} from "../controllers/expedientes";
 import { logMiddleware } from "../middleware/log";
 import { checkJWT } from "../middleware/session";
 
@@ -12,6 +12,7 @@ const router = Router();
 
 
 router.get("/"  ,getExpedientes);
+router.get("/getNextId"  ,getNextId);
 router.get("/:id" , logMiddleware, getExpediente);
 router.post("/" , postExpediente);
 router.put("/:id" , updateExpediente);

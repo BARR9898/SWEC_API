@@ -1,6 +1,7 @@
 import { Expediente } from "../interfaces/expediente.interface"
 import ExpedienteModel from "../models/expediente"
 import db from "../config/mysql"
+import moment from "moment"
 
 const insertExpedient = async (item: Expediente) => {
 
@@ -18,8 +19,10 @@ const insertExpedient = async (item: Expediente) => {
 
 }
 
-const getExpedients = async () => {
-    const responseItem = await getAllExpedients();    
+const getExpedients = async (query:any) => {
+    console.log('query',query);
+    let filtros = getAllExpedientsCreateFilters(query)
+    const responseItem = await getAllExpedients(filtros);    
     return responseItem;
 }
 
@@ -124,7 +127,7 @@ async function createExpedient(idPatientCreated: number, expediente: any) {
         objetivo_terapeutico,estrategia_terapeutica,
         pronostico_terapeutico,familiograma,area_familiar_relacion,
         mapeo_familiar,impresiones_diagnosticas_familia,
-        hipotesis_familiar,examen_mental,indicaciones_diagnosticas,foco_terapeutico,new Date()],
+        hipotesis_familiar,examen_mental,indicaciones_diagnosticas,foco_terapeutico,moment(new Date()).format('YYYY-MM-DD h:mm:ss')],
         'expedientes',
         false
     )
@@ -243,6 +246,7 @@ async function getExpedientCreated(idExpediente: number) {
     //Obtenemos las impresiones diagnosticas
     const impresiones_diagnosticas = await getImpresionesDiagnosticas(idExpediente)
     expedient_data.expediente.impresiones_diagnosticas = impresiones_diagnosticas;
+
 
     console.log('expedient_data',expedient_data);
      
@@ -394,8 +398,12 @@ async function DeleteExpedientes_Pacientes(expedienteId: number) {
 }
 
 //GET EXPEDIENTS 
-async function getAllExpedients(){
-    const [rows]:any = await db.pool.query('SELECT e.id,p.nombre,p.apellido_paterno,p.apellido_materno FROM pacientes p , expedientes e INNER JOIN expedientes_pacientes on expedientes_pacientes.id_expediente = e.id INNER JOIN pacientes on expedientes_pacientes.id_paciente = pacientes.id WHERE e.id = expedientes_pacientes.id_expediente AND p.id = expedientes_pacientes.id_paciente')
+async function getAllExpedients(filtros:any){
+    console.log('f',filtros);
+    
+    const [rows]:any = await db.pool.query(`SELECT e.id,e.fecha_creacion, p.nombre, p.apellido_paterno, p.apellido_materno FROM pacientes p , expedientes e INNER JOIN expedientes_pacientes on expedientes_pacientes.id_expediente = e.id INNER JOIN pacientes on expedientes_pacientes.id_paciente = pacientes.id WHERE e.id = expedientes_pacientes.id_expediente AND p.id = expedientes_pacientes.id_paciente ${filtros.nombre} `)
+    console.log('rows',rows);
+    
     return rows
     
 }
@@ -433,5 +441,51 @@ async function updateSintomas(idExpediente:number,sintomas:any){
 }
 
 
+const selectNextId = async () => {
+    const [result]:any = await db.pool.query("SELECT id FROM expedientes ORDER BY  id DESC LIMIT 1")  
+    console.log(result);
+      
+    return result[0].id
 
-export { insertExpedient, getExpedient, getExpedients, updateExpedient, deleteExpedient }
+} 
+
+
+ function getAllExpedientsCreateFilters(query:any){
+    let filters = {  
+        nombre: '',
+        apellido_materno: '',
+        apellido_paterno: ''
+    }
+
+    switch (query.nombre) {
+        case '':
+            filters.nombre  = ''
+            break;
+        default:
+            filters.nombre  = `AND p.nombre = '${query.nombre}'`
+            break;
+    }
+
+    switch (query.apellido_materno) {
+        case '':
+            filters.apellido_materno  = ''
+            break;
+        default:
+            filters.apellido_materno  = `AND p.apellido_materno = '${query.apellido_materno}'`
+            break;
+    }
+
+    switch (query.apellido_paterno) {
+        case '':
+            filters.apellido_paterno  = ''
+            break;
+        default:
+            filters.apellido_paterno  = `AND p.apellido_paterno = '${query.apellido_paterno}'`
+            break;
+    }
+
+    return filters
+    
+}
+
+export { insertExpedient, getExpedient, getExpedients, updateExpedient, deleteExpedient,selectNextId }
