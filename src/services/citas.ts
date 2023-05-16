@@ -8,6 +8,16 @@ import moment from "moment"
 
 const insertCita = async (cita: any) => {
     const {status,asistencia,id_paciente,fecha} = cita
+
+    const [evaluateIfDateExist]:any = await db.pool.query('SELECT * FROM citas WHERE citas.fecha = ?',[fecha])
+    console.log('evaluateIfDateExist',evaluateIfDateExist);
+    if (evaluateIfDateExist.length != 0) {
+        let data = {
+            message: 'Ya existe una cita registrada con esta fecha'
+        }
+        return data
+    }
+    
         
     const [result]:any = await db.pool.query('INSERT INTO citas (id,fecha,status,asistencia) VALUES (?,?,?,?)',
     [null,fecha,status,asistencia])    
@@ -68,7 +78,8 @@ const selectDates_agenda = async (querys?:any) => {
     INNER JOIN pacientes p on p.id = cp.id_paciente
     INNER JOIN expedientes_pacientes ep on p.id = ep.id_paciente
     INNER JOIN expedientes e on e.id = ep.id_expediente
-    WHERE c.id = cp.id_cita  ${filters.desde} ${filters.hasta} ${filters.asistencia}`)
+    WHERE c.id = cp.id_cita  ${filters.desde} ${filters.hasta} ${filters.asistencia}
+    AND c.status  = true`)
     return result    
 }
 
@@ -126,20 +137,23 @@ function createFilters(query:any){
        filters.hasta = '' : filters.hasta = `AND c.fecha <= '${query.hasta}'`
 
     switch (query.asistencia) {
-        case 'true':
-            filters.asistencia = `AND c.asistencia = 1`
+        case 'con asistencia':
+            filters.asistencia = `AND c.asistencia = true`
             break;
-        case 'false':
-            filters.asistencia = `AND c.asistencia = 0`
+        case 'sin asistencia':
+            filters.asistencia = `AND c.asistencia = false`
             break;
-        case 'null':
-                filters.asistencia = `AND c.asistencia = null`
+        case 'pendientes':
+                filters.asistencia = `AND c.asistencia = -1`
                 break;
         default:
             filters.asistencia = ''
 
             break;
     }
+
+    console.log('filtro',filters);
+    console.log('query',query);
 
     return filters
     
