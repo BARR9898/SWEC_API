@@ -1,5 +1,6 @@
 import { Request,response,Response } from "express";
-import { registerNewUser,loginUser } from "../services/auth";
+import { registerNewUser,loginUser,validateEmail,setPassword} from "../services/auth";
+import mysql from "../config/mysql";
 
 const registerController = async ({body} :Request,res:Response) => {
     try {
@@ -22,4 +23,59 @@ const loginController = async ({body}: Request,res:Response) => {
     }
 }
 
-export {loginController,registerController}
+const existEmail = async({body}: Request,res:Response) => {
+    const {email} = body;
+    const emailExist = await validateEmail(email);
+    
+    if(emailExist == false){
+        res.send({
+           result:false
+        }) 
+        
+    }else{
+        res.send({
+            result: true,
+            data: emailExist
+        })
+    }
+
+
+
+
+}
+
+const resetPassword  =  async({body}: Request,res:Response) => {
+    const {email,userId,newPassword} = body;
+    const passwordWasSeted = await setPassword(email,userId,newPassword);
+    if(passwordWasSeted?.result){
+        res.send({
+            result:true
+        })
+    }else{
+        res.send({
+            result:false
+        })
+    }
+    
+    /*
+    if(emailExist == false){
+        res.send({
+           result:false
+        }) 
+        
+    }else{
+        res.send({
+            result: true,
+            data: emailExist
+        })
+    }
+    */
+
+
+
+
+}
+
+
+
+export {loginController,registerController,existEmail,resetPassword}

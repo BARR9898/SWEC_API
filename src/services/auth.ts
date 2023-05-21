@@ -58,4 +58,65 @@ async function registerUser(email:string,password:string,name:string,rol:string)
     }
 }
 
-export {registerNewUser,loginUser};
+async function validateEmail(email:string){
+    const [result]:any = await pool.query('SELECT * FROM usuarios WHERE usuario = ?',[email])
+    if (result[0] != null) {
+        return result[0]
+    }
+    return false
+
+    
+}
+
+async function setPassword(email:string,userId:number,newPassword:string){
+
+    const [select_user_result]:any = await pool.query('SELECT * FROM usuarios WHERE id = ?',[userId])
+    if (!select_user_result[0]) {
+        return
+    }
+
+    const [delete_user_result]:any = await pool.query('DELETE FROM usuarios WHERE id = ?',[userId])
+
+    const user_data = select_user_result[0]
+
+
+    console.log('user_data',user_data);
+
+
+
+    let user_new_data:User =  {
+        name: user_data.nombre,
+        rol: user_data.rol,
+        password: newPassword,
+        description:  '',
+        email: user_data.usuario
+    }
+
+    const result_register_user:any = await registerNewUser(user_new_data)
+
+
+
+    console.log('result_register_user',result_register_user);
+    
+    if (result_register_user.affectedRows != 1) {
+        let response =  {
+            result:false,
+            message:"contraseña no modificada "
+        }
+        return response
+    }else{
+        let response =  {
+            result:true,
+            message:"contraseña modificada "
+        }
+        return response
+    }
+
+    
+    //const [delete_result]:any = await pool.query('DELETE FROM usuarios WHERE id = ?',[userId])
+
+
+    
+}
+
+export {registerNewUser,loginUser,validateEmail,setPassword};
