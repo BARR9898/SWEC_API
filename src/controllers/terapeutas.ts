@@ -1,5 +1,5 @@
 import { Request,response,Response } from "express"
-import { insertTerapeuta,selectTerapeutas,selectDate, updateDate, deleteDate , selectDates_agenda} from "../services/terapeutas";
+import { insertTerapeuta,selectTerapeutas,deleteTerapeut,selectTerapeuta,updateTerapeuta} from "../services/terapeutas";
 import { handleHttp } from "../utils/error.handle";
 import ExpedienteModel from "../models/expediente";
 
@@ -13,32 +13,74 @@ const postTerapeuta = async ({body} : Request,res:Response) => {
     }*/
 
     const responseItem = await insertTerapeuta(body);
-    if (responseItem) {
-        res.send({
-            result: true,
-            data:responseItem,
-            status: 200
-        }); 
-    }else{
-        res.send({
-            result: false
-        }); 
+    switch (responseItem) {
+        case 'SOLO PUEDE EXISTIR UN TERAPEUTA':
+            res.send({
+                result: false,
+                message:'Solo puede existir un terapeuta.',
+                
+            }); 
+            break;
+        case null:
+            res.send({
+                result: false
+            }); 
+            break;
+        default:
+            res.send({
+                result: true,
+                data:responseItem,
+                status: 200
+            }); 
+            break;
     }
+}
 
+const putTerapeuta = async ({body} : Request,res:Response) => {
+    /*const isValidData = ValidateData(body);
+    if (!isValidData) {
+        res.send({
+            result:false,
+            data: "Información incompleta"
+        })
+    }*/
 
-
+    const responseItem = await updateTerapeuta(body);
+    switch (responseItem) {
+        case true:
+            res.send({
+                result: true,
+                data:responseItem,
+                status: 200
+            }); 
+            break;
+        case false:
+            res.send({
+                result: false
+            }); 
+            break;
+        default:
+            break;
+    }
 }
 
 
-const deleteCita = async ({params} : Request,res:Response) => {
+const deleteTerapeuta = async ({params} : Request,res:Response) => {
     try {
         const {id} = params;
-        const responseItem = await deleteDate(id);
-        res.send({
-            result:true,
-            data:responseItem,
-            stauts:200
-        }); 
+        const responseItem = await deleteTerapeut(id);
+        if(responseItem){
+            res.send({
+                result:true,
+                data:responseItem,
+                stauts:200
+            });
+        }else{
+            res.send({
+                result:false
+            }); 
+        }
+
         
     } catch (e) {
         res.send({
@@ -67,10 +109,11 @@ const getAllTerapeutas = async ({params,query}: Request,res:Response) => {
 
 }
 
-const getAllCitas_agenda = async ({query}: Request,res:Response) => {
+
+const getTerapeuta = async ({params,query}: Request,res:Response) => {
     try {
-                
-       const response = await selectDates_agenda(query);
+        const {id}  = params
+       const response = await selectTerapeuta(id);
         const data = response ? response: "NOT_FOUND"
         res.send({
             result:true,
@@ -86,25 +129,7 @@ const getAllCitas_agenda = async ({query}: Request,res:Response) => {
 
 }
 
-const getCita = async ({params} : Request,res:Response) => {
-    try {
-        const {id} = params;
-        const response = await selectDate(id);
-        const data = response ? response: "NOT_FOUND"
-        res.send({
-            result:true,
-            data:data,
-            status:200
-        });
-    } catch (e) {
-        res.send({
-            result:false,
-            data:e
-        })
-    }
-
-}
-
+/*
 const updateCita = async ({params,body} : Request,res:Response) => {
     try {
         const {id} = params;
@@ -124,5 +149,6 @@ const updateCita = async ({params,body} : Request,res:Response) => {
         })
     }
 
-}
-export {postTerapeuta,getAllTerapeutas,getCita,updateCita,deleteCita,getAllCitas_agenda}
+}*/
+
+export {postTerapeuta,getAllTerapeutas,deleteTerapeuta,getTerapeuta,putTerapeuta}
