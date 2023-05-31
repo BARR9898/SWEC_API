@@ -2,17 +2,13 @@ import { Request,response,Response } from "express"
 import { insertExpedient,deleteExpedient,getExpedient,getExpedients,updateExpedient,selectNextId} from "../services/expedientes";
 import { handleHttp } from "../utils/error.handle";
 import ExpedienteModel from "../models/expediente";
+import { Res } from "../interfaces/response";
 
 const getExpediente = async ({params} : Request,res:Response) => {
     try {
         const {id} = params;
         const response = await getExpedient(id);
-        const data = response ? response: "NOT_FOUND"
-        res.send({
-            result:true,
-            data:data,
-            status:200
-        });
+        res.send(response);
     } catch (e) {
         res.send({
             result:false,
@@ -44,11 +40,7 @@ const getExpedientes = async (req:Request,res:Response) => {
     try {
         const {query} = req
         const response = await getExpedients(query);
-        res.send({
-            result:true,
-            data:response,
-            status:200
-        });
+        res.send(response);
     } catch (e) {
         res.send({
             result:false,
@@ -74,7 +66,7 @@ const updateExpediente = async ( {params,body} :Request,res:Response) => {
     }
 }
 
-const postExpediente = async ({body} : Request,res:Response) => {
+const postExpediente = async ({body,query} : Request,res:Response) => {
         /*const isValidData = ValidateData(body);
         
         
@@ -84,13 +76,9 @@ const postExpediente = async ({body} : Request,res:Response) => {
                 data: "Información incompleta"
             })
         }*/
-        const responseItem = await insertExpedient(body);
-
-        res.send({
-            result: true,
-            data:responseItem,
-            status: 200
-        }); 
+        
+        const responseItem:Res = await insertExpedient(body,query)
+        res.send(responseItem); 
 
     
 }
@@ -98,12 +86,8 @@ const postExpediente = async ({body} : Request,res:Response) => {
 const deleteExpediente = async ({params} : Request,res:Response) => {
     try {
         const {id} = params;
-        const responseItem = await deleteExpedient(id);
-        res.send({
-            result:true,
-            data:responseItem,
-            stauts:200
-        }); 
+        const responseItem:Res = await deleteExpedient(id);
+        res.send(responseItem); 
         
     } catch (e) {
         res.send({

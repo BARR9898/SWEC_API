@@ -10,7 +10,6 @@ const insertTerapeuta = async (terapeuta: any) => {
     const {nombre,apellido_materno,apellido_paterno} = terapeuta
 
     const [result_select_terapeuta]:any = await db.pool.query('SELECT * FROM  terapeutas',[nombre,apellido_paterno,apellido_materno])
-    console.log('result_select_terapeuta',result_select_terapeuta.length);
     
     if (result_select_terapeuta.length != 0) {
         return  'SOLO PUEDE EXISTIR UN TERAPEUTA'
@@ -60,7 +59,6 @@ const updateTerapeuta = async (terapeuta: any) => {
     const {id,nombre,apellido_materno,apellido_paterno} = terapeuta
 
     const [result_update_terapeuta]:any = await db.pool.query('UPDATE terapeutas  SET  nombre = ? , apellido_materno = ? ,  apellido_paterno = ? WHERE  id  = ?',[nombre,apellido_materno,apellido_paterno,id])
-    console.log('result_update_terapeuta',result_update_terapeuta);
     
     if (result_update_terapeuta.affectedRows != 1) {
         return  false
@@ -101,8 +99,6 @@ function createFilters(query:any){
             break;
     }
 
-    console.log('filtro',filters);
-    console.log('query',query);
 
     return filters
     

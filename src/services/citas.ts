@@ -5,17 +5,24 @@ import db from "../config/mysql"
 import { query } from "express"
 import { Request } from "express"
 import moment from "moment"
+import { Res } from "../interfaces/response"
 
-const insertCita = async (cita: any) => {
+const insertCita = async (cita: any) : Promise<Res> =>  {
+
+    let response:Res = {
+        result: false,
+        data: []
+    }
     const {status,asistencia,id_paciente,fecha} = cita
 
     const [evaluateIfDateExist]:any = await db.pool.query('SELECT * FROM citas WHERE citas.fecha = ?',[fecha])
-    console.log('evaluateIfDateExist',evaluateIfDateExist);
     if (evaluateIfDateExist.length != 0) {
-        let data = {
-            message: 'Ya existe una cita registrada con esta fecha'
-        }
-        return data
+
+        response.result = true
+        response.data = []
+        response.message = "Ya existe una cita registrada para esta fecha"
+
+        return response
     }
     
         
@@ -23,7 +30,11 @@ const insertCita = async (cita: any) => {
     [null,fecha,status,asistencia])    
 
     if(!result.insertId){
-        return false
+        response.result = false
+        response.data = []
+        response.message = "Ocurrio un error al registrar la cita"
+        return response
+
     }
 
     let id_cita =  result.insertId
@@ -32,10 +43,16 @@ const insertCita = async (cita: any) => {
     [null,id_paciente,id_cita])
 
     if(!result_insert_pacientes_citas.insertId){
-        return false
+        response.result = false
+        response.data = []
+        response.message = "Ocurrio un error al relacionar la cita con el paciente"
+        return response    
     }
     
-    return true
+    response.result = true
+    response.data = []
+    response.message = "Cita registrada con exito"
+    return response
     
     
     
@@ -49,7 +66,7 @@ const selectDates = async (id_paciente:any,querys?:any) => {
         [id_paciente])
         return result
     }else if(querys.desde != '' && querys.hasta == ''){
-        let hoy = `${new Date().getFullYear()}-${new Date().getMonth()}-${new Date().getDay()} 11:59:59`
+        let hoy = `${new Date().getFullYear()}-${new Date().getMonth()}-${new Date().getDay()} 23:59:59`
         const [result]:any = await db.pool.query('SELECT citas.id,citas.status,citas.asistencia,citas.fecha from citas INNER JOIN citas_pacientes cp on cp.id_cita =  citas.id INNER JOIN pacientes  on cp.id_paciente =  pacientes.id WHERE pacientes.id = ? AND citas.fecha >= ? AND citas.fecha <= ?',
         [id_paciente,querys.desde,hoy])
         return result
@@ -100,26 +117,42 @@ const updateDate = async (id: any, data: any) => {
     return result
 }
 
-const deleteDate = async (id: any) => {
+const deleteDate = async (id: any) : Promise<Res> => {
 
-    const [result_delete_pacientes_citas]:any = await db.pool.query('DELETE FROM citas_pacientes WHERE id_cita = ?',
-    [id])
-
-    if (!result_delete_pacientes_citas.affectedRows) {
-        return false
-    }
-    
-    const [result]:any = await db.pool.query('DELETE FROM citas WHERE id = ?',
-    [id])
-    
-    if (!result.affectedRows) {
-        return false
+    let  response:Res = {
+        result: false,
+        data: []
     }
 
-
-
-    return true
+    try {
+        const [result_delete_pacientes_citas]:any = await db.pool.query('DELETE FROM citas_pacientes WHERE id_cita = ?',
+        [id])
     
+        if (!result_delete_pacientes_citas.affectedRows) {
+            response.result = false,
+            response.message =  'Error al eliminar la relacion cita - paciente'
+            return response
+        }
+        
+        const [result]:any = await db.pool.query('DELETE FROM citas WHERE id = ?',
+        [id])
+        
+        if (!result.affectedRows) {
+            response.result = false,
+            response.message =  'Error al eliminar la cita'
+            return response
+        }
+
+        response.result = true,
+        response.message =  'Ciita eliminada con exiito'
+        return response
+
+    } catch (error) {
+        response.result = false,
+        response.message =  'Ocurrio un error al realiizar la operacion'
+        return response
+        
+    }    
 }
 
 
@@ -152,8 +185,6 @@ function createFilters(query:any){
             break;
     }
 
-    console.log('filtro',filters);
-    console.log('query',query);
 
     return filters
     

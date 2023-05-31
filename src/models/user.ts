@@ -24,8 +24,8 @@ const UserSchema = new Schema<User>(
         rol: {
             type:String,
             required: true
+        
         }
-
 
 
     },

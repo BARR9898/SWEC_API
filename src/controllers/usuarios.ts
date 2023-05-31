@@ -1,10 +1,9 @@
 import { Request,response,Response } from "express"
-import { insertCita,selectDates,selectDate, updateDate, deleteDate , selectDates_agenda} from "../services/citas";
+import { insertUsuario,selectUsuarios,deleteUsuario,selectUsuario} from "../services/usuarios";
 import { handleHttp } from "../utils/error.handle";
 import ExpedienteModel from "../models/expediente";
-import { Res } from "../interfaces/response";
 
-const postCita = async ({body} : Request,res:Response) => {
+const postUsuario = async ({body} : Request,res:Response) => {
     /*const isValidData = ValidateData(body);
     if (!isValidData) {
         res.send({
@@ -13,73 +12,59 @@ const postCita = async ({body} : Request,res:Response) => {
         })
     }*/
 
-    const responseItem:Res = await insertCita(body);
-    res.send(responseItem); 
-
-
-}
-
-
-const deleteCita = async ({params} : Request,res:Response) => {
-    try {
-        const {id} = params;
-        const responseItem = await deleteDate(id);
-        res.send(responseItem); 
-        
-    } catch (e) {
-        res.send({
-            result:false,
-            data:e
-
-        })
-    }
-}
-
-const getAllCitas = async ({params,query}: Request,res:Response) => {
-    try {
-        
-        
-        const {id} = params;
-        
-       const response = await selectDates(id,query);
-        const data = response ? response: "NOT_FOUND"
-        res.send({
-            result:true,
-            data:data,
-            status:200
-        });
-    } catch (e) {
-        res.send({
-            result:false,
-            data:e
-        })
-    }
-
-}
-
-const getAllCitas_agenda = async ({query}: Request,res:Response) => {
-    try {
+    const responseItem = await insertUsuario(body);
+    switch (responseItem) {
+        case 'ALREADY_USER':
+            res.send({
+                result: false,
+                message:'El  usuario ya existe',
                 
-       const response = await selectDates_agenda(query);
-        const data = response ? response: "NOT_FOUND"
-        res.send({
-            result:true,
-            data:data,
-            status:200
-        });
-    } catch (e) {
-        res.send({
-            result:false,
-            data:e
-        })
+            }); 
+            break;
+        case null:
+            res.send({
+                result: false
+            }); 
+            break;
+        default:
+            res.send({
+                result: true,
+                data:responseItem,
+                status: 200
+            }); 
+            break;
     }
-
 }
 
-const getCita = async ({params} : Request,res:Response) => {
+const removeUsuario = async ({params} : Request,res:Response) => {
     try {
         const {id} = params;
-        const response = await selectDate(id);
+        const responseItem = await deleteUsuario(id);
+        if(responseItem){
+            res.send({
+                result:true,
+                data:responseItem,
+                stauts:200
+            });
+        }else{
+            res.send({
+                result:false
+            }); 
+        }
+
+        
+    } catch (e) {
+        res.send({
+            result:false,
+            data:e
+
+        })
+    }
+}
+
+const getAllUsuarios = async ({params,query}: Request,res:Response) => {
+    try {
+       const response = await selectUsuarios();
         const data = response ? response: "NOT_FOUND"
         res.send({
             result:true,
@@ -95,6 +80,27 @@ const getCita = async ({params} : Request,res:Response) => {
 
 }
 
+
+const getUsuario = async ({params,query}: Request,res:Response) => {
+    try {
+        const {id}  = params
+       const response = await selectUsuario(id);
+        const data = response ? response: "NOT_FOUND"
+        res.send({
+            result:true,
+            data:data,
+            status:200
+        });
+    } catch (e) {
+        res.send({
+            result:false,
+            data:e
+        })
+    }
+
+}
+
+/*
 const updateCita = async ({params,body} : Request,res:Response) => {
     try {
         const {id} = params;
@@ -114,5 +120,6 @@ const updateCita = async ({params,body} : Request,res:Response) => {
         })
     }
 
-}
-export {postCita,getAllCitas,getCita,updateCita,deleteCita,getAllCitas_agenda}
+}*/
+
+export {postUsuario,getAllUsuarios,removeUsuario,getUsuario}

@@ -2,16 +2,15 @@ import { hash } from "bcryptjs";
 import { Auth } from "../interfaces/auth.interface";
 import { User } from "../interfaces/user.interface";
 import UserModel from "../models/user";
-import { encrypt, verfied } from "../utils/bcrypt.handle";
+import { encrypt, verfied} from "../utils/bcrypt.handle";
 import { generateToken } from "../utils/jwt.handle";
 import {pool} from "../config/mysql"
 
-const registerNewUser = async ({email,password,name,rol}:User) => {
+const registerNewUser = async ({email,password,name,rol,lastname,second_lastname}:User) => {
     const checkIs = await getUserByEmail(email)
-    console.log('checkIs',checkIs);
     if (checkIs) return "ALREADY_USER";
     const passHash = await encrypt(password);
-    const registerNewUser = await registerUser(email,passHash,name,rol);
+    const registerNewUser = await registerUser(email,passHash,name,rol,lastname,second_lastname);
     return registerNewUser;
 }
 
@@ -19,13 +18,21 @@ const loginUser = async ({email,password}:Auth) => {
     const checkIs = await getUserByEmail(email)
     if (!checkIs) return "NOT_FOUND_USER";
     const passwordHash = checkIs.password; //Password encriptada desde BDD
-    console.log('passwordHash',passwordHash);
     const isCorrect = await verfied(password,passwordHash);
     if(!isCorrect) return  "PASSWORD_INCORRECT";    
     const token = generateToken(checkIs.email);
     const data = {
         token,
-        user: checkIs
+        user: {
+            id: checkIs.id,
+            nombre: checkIs.nombre,
+            apellido_paterno: checkIs.lastname,
+            apellido_materno: checkIs.second_lastname,
+            rol: checkIs.rol,
+
+
+
+        }
     }
     return data;
     /*
@@ -35,7 +42,6 @@ const loginUser = async ({email,password}:Auth) => {
 async function getUserByEmail(email:string){
     try {
         const [rows]:any =  await pool.query("SELECT * FROM usuarios WHERE usuario = ?" , [email])
-        console.log('getUserByEmail',rows[0]);
         return rows[0]
     } catch (error) {
         console.log(error);
@@ -45,14 +51,12 @@ async function getUserByEmail(email:string){
    
 }
 
-async function registerUser(email:string,password:string,name:string,rol:string){
+async function registerUser(email:string,password:string,name:string,rol:string,lastname:string,second_lastname:string){
     try {
-        const [result] = await pool.query("INSERT INTO usuarios (id,nombre,usuario,password,rol) VALUES (?,?,?,?,?)",[null,name,email,password,rol])
-        console.log(result);
+        const [result] = await pool.query("INSERT INTO usuarios (id,nombre,usuario,password,rol,lastname,second_lastname) VALUES (?,?,?,?,?,?,?)",[null,name,email,password,rol,lastname,second_lastname])
         return result
         
     } catch (error) {
-        console.log(error);
         return false
         
     }
@@ -80,7 +84,6 @@ async function setPassword(email:string,userId:number,newPassword:string){
     const user_data = select_user_result[0]
 
 
-    console.log('user_data',user_data);
 
 
 
@@ -89,14 +92,16 @@ async function setPassword(email:string,userId:number,newPassword:string){
         rol: user_data.rol,
         password: newPassword,
         description:  '',
-        email: user_data.usuario
+        email: user_data.usuario,
+        lastname:user_data.lastname,
+        second_lastname:user_data.second_lastname
+
     }
 
     const result_register_user:any = await registerNewUser(user_new_data)
 
 
 
-    console.log('result_register_user',result_register_user);
     
     if (result_register_user.affectedRows != 1) {
         let response =  {

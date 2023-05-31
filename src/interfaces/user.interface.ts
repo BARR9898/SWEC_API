@@ -3,5 +3,8 @@ import { Auth } from "./auth.interface";
 export interface User extends Auth{
     name: string,
     description: string,
-    rol: "Administrador" 
+    rol: "Administrador" | "Superusuario",
+    lastname: string,
+    second_lastname: string,
+
 }

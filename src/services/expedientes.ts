@@ -2,33 +2,72 @@ import { Expediente } from "../interfaces/expediente.interface"
 import ExpedienteModel from "../models/expediente"
 import db from "../config/mysql"
 import moment from "moment"
+import { Res } from "../interfaces/response"
 
-const insertExpedient = async (item: Expediente) => {
+const insertExpedient = async (item: Expediente,params:any) : Promise<Res> => {
+
+    let response:Res = {
+        result: false,
+        data: []
+    }
 
     const { paciente, expediente } = item
-    const idPatientCreated = await createPatient(paciente);
+    let {user_id} = params
+    user_id =  parseInt(user_id)
+    
+    const idPatientCreated = await createPatient(paciente,user_id);
     if (!idPatientCreated) {
-        return
+        response.data = []
+        response.message = "Error al crear el paciente"
+        response.result = true
+        return response
     }
-    const expedientCreatedSuccessfuly = await createExpedient(idPatientCreated, expediente)
+
+    const expedientCreatedSuccessfuly = await createExpedient(user_id,idPatientCreated, expediente)
    if(!expedientCreatedSuccessfuly){
-    return null
+    response.data = []
+    response.message = "Error al crear el expediente"
+    response.result = true
+    return response
    }
 
-    return expedientCreatedSuccessfuly
+    response.data = expedientCreatedSuccessfuly
+    response.result = true
+    response.message =  "Expediente  creado con exito"
+    return response
 
 }
 
-const getExpedients = async (query:any) => {
-    console.log('query',query);
+const getExpedients = async (query:any) : Promise<Res> => {
+    let response:Res = {
+        result: false,
+        data: [],
+        message:  ''
+    }
+
     let filtros = getAllExpedientsCreateFilters(query)
-    const responseItem = await getAllExpedients(filtros);    
-    return responseItem;
+    const responseItem = await getAllExpedients(filtros); 
+    if(responseItem.length == 0) {
+        response.data = [],
+        response.message = 'No existen expedientes registrados',
+        response.result= false
+        return response
+    }
+
+    response.data = responseItem,
+    response.result= true
+    return response
 }
 
-const getExpedient = async (id: any) => {
-    const responseItem = await getExpedientCreated(id)
-    return responseItem;
+const getExpedient = async (id: any) : Promise<Res> => {
+    let response:Res = {
+        result: false,
+        data:  []
+    }
+    const responseItem:Expediente = await getExpedientCreated(id)
+    response.result = true,
+    response.data = responseItem
+    return response;
 }
 
 const updateExpedient = async (id: any, data: Expediente) => {
@@ -42,7 +81,15 @@ const updateExpedient = async (id: any, data: Expediente) => {
     
 }
 
-const deleteExpedient = async (id: any) => {
+const deleteExpedient = async (id: any) : Promise<Res>  => {
+
+    let response:Res = {    
+        result: false,
+        data: [],
+        message: ''
+
+    }
+
     //Delete from sintomas
     await DeleteSintomas(id)
 
@@ -55,34 +102,22 @@ const deleteExpedient = async (id: any) => {
     //Delete from expedientes_pacientes
     await DeleteExpedientes_Pacientes(id)
     
-    const responseItem = id
-    return responseItem;
+    response.data = [],
+    response.message =  'Expediente eliminado correctamente'
+    response.result = true
+    return response;
     
 }
 
 //Metodos para agregar data a la BDD
-async function getTerapeut() {
-    const [rows]: any = await db.pool.query("SELECT id FROM terapeutas ORDER BY id DESC LIMIT 1", [])
-    if (rows.length > 0) {
-        return rows[0].id
-    } else {
-        return false
-    }
 
-
-}
-
-async function createPatient(patient: any) {
-    const terapeutId = await getTerapeut()
-    if (!terapeutId) {
-        return
-    }
+async function createPatient(patient: any,user_id:any) {
     const { nombre, apellido_materno, apellido_paterno, edad, sexo, direccion, ingresos_mensuales, ocupacion } = patient
     const [rows]: any = await db.pool.query("INSERT INTO pacientes (id,nombre,apellido_materno,apellido_paterno,edad,sexo,direccion,ingresos_mensuales,ocupacion) VALUES (?,?,?,?,?,?,?,?,?)",
         [null, nombre, apellido_materno, apellido_paterno, edad, sexo, direccion, ingresos_mensuales, ocupacion])
     if (rows.affectedRows) {
         const patientId = rows.insertId;
-        const relationedSuccessfuly = await insertIntoPatientTerapeut(patientId, terapeutId)
+        const relationedSuccessfuly = await insertIntoPatientTerapeut(patientId, user_id)
         if (!relationedSuccessfuly) {
             return
         }
@@ -94,14 +129,14 @@ async function createPatient(patient: any) {
 }
 
 async function insertIntoPatientTerapeut(id_patient: number, id_terapeut: number) {
-    const [rows]: any = await db.pool.query("INSERT INTO pacientes_terapeutas (id,id_paciente,id_terapeuta) VALUES (?,?,?)", [null, id_patient, id_terapeut])
+    const [rows]: any = await db.pool.query("INSERT INTO usuarios_terapeutas (id,id_paciente,id_terapeuta) VALUES (?,?,?)", [null, id_patient, id_terapeut])
     if (rows.affectedRows) {
         return true
     }
     return false
 }
 
-async function createExpedient(idPatientCreated: number, expediente: any) {
+async function createExpedient(user_id:string,idPatientCreated: number, expediente: any) {
 
     
     const {motivo_de_consulta,circunstancias_aparicion,descripcion_fisica,sintomas,demanda_tratamiento
@@ -112,7 +147,6 @@ async function createExpedient(idPatientCreated: number, expediente: any) {
     examen_mental,indicaciones_diagnosticas,foco_terapeutico,
     impresiones_diagnosticas,
     modalidad_terapeutica} = expediente
-    console.log('sintomas',sintomas);
     
     
     const IdExpedientCreated = await InsertExpedientData(
@@ -138,7 +172,7 @@ async function createExpedient(idPatientCreated: number, expediente: any) {
     insertExpedientSintomas(IdExpedientCreated,'sintoma',sintomas,'sintomas','expedientes_sintomas','id_sintoma')
     insertExpedientImpresionesDiagnosticas(IdExpedientCreated,['eje','dcm','cie','transtorno'],impresiones_diagnosticas,'impresiones_diagnosticas','expedientes_impresiones_diagnosticas','id_impresion_diagnostica')
     insertExpedientModalidadTerapeutica(IdExpedientCreated,['ti','tf','tp','tg','otra','fundamento'],modalidad_terapeutica,'modalidades_terapeuticas','expedientes_modalidades_terapeuticas','id_modalidad')
-    const expedientCreated = await getExpedientCreated(IdExpedientCreated)
+    const expedientCreated:Expediente = await getExpedientCreated(IdExpedientCreated)
     return expedientCreated
     
 
@@ -204,9 +238,42 @@ async function insertExpedientModalidadTerapeutica(id_expedient: number, column:
 
 async function getExpedientCreated(idExpediente: number) {
 
-    let expedient_data:any = {
-        expediente: null,
-        paciente: null
+    let expedient_data:Expediente = {
+        paciente:{
+            nombre:'',
+            edad:'',
+            sexo:'M',
+            apellido_paterno:'',
+            apellido_materno:'',
+            ocupacion: '',
+            ingresos_mensuales: '',
+            direccion: ''
+    
+        },
+        expediente:{
+            motivo_de_consulta:'',
+            circunstancias_de_aparicion:'',
+            sintomas:[],
+            descripcion_fisica:'',
+            demanda_de_tratamiento:'',
+            area_escolar:'',
+            area_laboral:'',
+            acontecimientos_significativos:'',
+            desarrollo_psicosexual:'',
+            familiograma:'',
+            area_de_relacion_y_familiar:'',
+            mapeo_familiar:'',
+            impresion_diagnostica_de_familia:'',
+            hipotesis_familiar: '',
+            examen_mental:'',
+            indicaciones_diagnosticas:'',
+            impresiones_diagnosticas:[],
+            modalidad_terapeutica: [],
+            objetivo_terapeutico: '',
+            estrategias_terapeuticas: [{}],
+            pronostico_terapeutico: '',
+            foco:''
+        }
     };
 
     //Obtenemos la información del expediente
@@ -233,22 +300,16 @@ async function getExpedientCreated(idExpediente: number) {
 
     //Obtenemos los sintomas
     const sintomas = await getSintomas(idExpediente)
-    console.log('sintomas - getSintomas',sintomas);
     
     expedient_data.expediente.sintomas = sintomas;
-    //console.log('expediente-sintomas',expedient_data);
 
     //Obtenemos la modalidad terapeutica
     const modalidades_terapeuticas = await getModalidadTerapeutica(idExpediente)
-    expedient_data.expediente.modalida_terapeutica = modalidades_terapeuticas;
-    //console.log('expediente-modalidad_terapeutica',expedient_data);
+    expedient_data.expediente.modalidad_terapeutica = modalidades_terapeuticas;
 
     //Obtenemos las impresiones diagnosticas
     const impresiones_diagnosticas = await getImpresionesDiagnosticas(idExpediente)
     expedient_data.expediente.impresiones_diagnosticas = impresiones_diagnosticas;
-
-
-    console.log('expedient_data',expedient_data);
      
     return expedient_data
    
@@ -309,7 +370,7 @@ async function getModalidadTerapeutica(expedienteId: number) {
 
 
     //Asignamos los sintomas a un array y retornarmos el arrya con los sintomas
-    let modalidades_terapeuticas: any = rows
+    let modalidades_terapeuticas = rows
     return modalidades_terapeuticas
 
 }
@@ -399,13 +460,19 @@ async function DeleteExpedientes_Pacientes(expedienteId: number) {
 
 //GET EXPEDIENTS 
 async function getAllExpedients(filtros:any){
-    console.log('f',filtros);
-    
-    const [rows]:any = await db.pool.query(`SELECT e.id,e.fecha_creacion, p.nombre, p.apellido_paterno, p.apellido_materno FROM pacientes p , expedientes e INNER JOIN expedientes_pacientes on expedientes_pacientes.id_expediente = e.id INNER JOIN pacientes on expedientes_pacientes.id_paciente = pacientes.id WHERE e.id = expedientes_pacientes.id_expediente AND p.id = expedientes_pacientes.id_paciente ${filtros.nombre} ${filtros.apellido_materno} ${filtros.apellido_paterno} `)
-    console.log('rows',rows);
-    
+    const [rows]:any = await db.pool.query(`SELECT e.id,e.fecha_creacion, p.nombre, p.apellido_paterno, p.apellido_materno FROM pacientes p , expedientes e 
+    INNER JOIN expedientes_pacientes on expedientes_pacientes.id_expediente = e.id 
+    INNER JOIN pacientes on expedientes_pacientes.id_paciente = pacientes.id 
+    INNER JOIN usuarios_terapeutas on usuarios_terapeutas.id_paciente = pacientes.id
+    INNER JOIN usuarios on usuarios_terapeutas.id_terapeuta = usuarios.id
+    WHERE e.id = expedientes_pacientes.id_expediente 
+    AND p.id = expedientes_pacientes.id_paciente
+    ${filtros.user_id}
+    ${filtros.nombre}
+    ${filtros.apellido_materno}
+    ${filtros.apellido_paterno}`)    
     return rows
-    
+   
 }
 
 
@@ -415,22 +482,18 @@ async function updatePaciente(idExpediente:number,paciente:any){
     const id_paciente = rows[0].id_paciente
 
     const {nombre,apellido_materno,apellido_paterno,edad,sexo,ingresos_mensuales,ocupacion} = paciente
-    console.log(id_paciente);
 
 
     const [result]:any =  await db.pool.query(`UPDATE pacientes SET nombre=? , edad=?, apellido_materno = ?, apellido_paterno =?, ingresos_mensuales = ?, ocupacion = ?, sexo = ? WHERE id=?`,[nombre,edad,apellido_materno,apellido_paterno,ingresos_mensuales,ocupacion,sexo,id_paciente])
-    console.log('result',result);
 
 }
 
 async function updateSintomas(idExpediente:number,sintomas:any){
 
-    console.log('sintomas', sintomas);
 
     
     //Get sintomas
     const [ids_sintomas]:any = await db.pool.query(`SELECT id_sintoma FROM expedientes_sintomas WHERE id_expediente = ?`,[idExpediente])
-    console.log('ids_sintomas',ids_sintomas);
 
     //Update sintomas
     ids_sintomas.forEach(async (sintoma:any,index:number)=> {
@@ -443,7 +506,6 @@ async function updateSintomas(idExpediente:number,sintomas:any){
 
 const selectNextId = async () => {
     const [result]:any = await db.pool.query("SELECT id FROM expedientes ORDER BY  id DESC LIMIT 1")  
-    console.log(result);
       
     return result[0].id
 
@@ -452,6 +514,7 @@ const selectNextId = async () => {
 
  function getAllExpedientsCreateFilters(query:any){
     let filters = {  
+        user_id: '',
         nombre: '',
         apellido_materno: '',
         apellido_paterno: ''
@@ -484,8 +547,18 @@ const selectNextId = async () => {
             break;
     }
 
+    switch (query.user_id) {
+        case '':
+            filters.user_id  = ''
+            break;
+        default:
+            filters.user_id  = `AND usuarios.id = ${query.user_id}`
+            break;
+    }
+
     return filters
     
 }
+
 
 export { insertExpedient, getExpedient, getExpedients, updateExpedient, deleteExpedient,selectNextId }

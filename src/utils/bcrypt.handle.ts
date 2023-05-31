@@ -13,4 +13,7 @@ const verfied = async (passPlane:string,passHash:string) => {
     return isCorrect;
 }
 
+
+
+
 export {encrypt,verfied}
