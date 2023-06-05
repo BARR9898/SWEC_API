@@ -59,8 +59,8 @@ const insertCita = async (cita: any) : Promise<Res> =>  {
 
 }
 
-const selectDates = async (id_paciente:any,querys?:any) => { 
-
+const selectDates = async (id_paciente:any,id_usuario:any,querys?:any) => { 
+id_usuario = 1;
     if (querys.desde == '' && querys.hasta == '') {
         const [result]:any = await db.pool.query('SELECT citas.id,citas.status,citas.asistencia,citas.fecha from citas INNER JOIN citas_pacientes cp on cp.id_cita =  citas.id INNER JOIN pacientes  on cp.id_paciente =  pacientes.id WHERE pacientes.id = ?',
         [id_paciente])
@@ -86,7 +86,7 @@ const selectDates = async (id_paciente:any,querys?:any) => {
     
 }
 
-const selectDates_agenda = async (querys?:any) => {
+const selectDates_agenda = async (user_id:string,querys?:any) => {
 
     let filters = createFilters(querys);
  
@@ -96,6 +96,7 @@ const selectDates_agenda = async (querys?:any) => {
     INNER JOIN expedientes_pacientes ep on p.id = ep.id_paciente
     INNER JOIN expedientes e on e.id = ep.id_expediente
     WHERE c.id = cp.id_cita  ${filters.desde} ${filters.hasta} ${filters.asistencia}
+
     AND c.status  = true`)
     return result    
 }

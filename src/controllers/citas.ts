@@ -35,13 +35,14 @@ const deleteCita = async ({params} : Request,res:Response) => {
     }
 }
 
-const getAllCitas = async ({params,query}: Request,res:Response) => {
+const getAllCitas = async ({params,query,body}: Request,res:Response) => {
     try {
         
         
         const {id} = params;
+        const {user_id} = body
         
-       const response = await selectDates(id,query);
+       const response = await selectDates(id,query,user_id);
         const data = response ? response: "NOT_FOUND"
         res.send({
             result:true,
@@ -59,8 +60,9 @@ const getAllCitas = async ({params,query}: Request,res:Response) => {
 
 const getAllCitas_agenda = async ({query}: Request,res:Response) => {
     try {
-                
-       const response = await selectDates_agenda(query);
+               
+        let user_id = '1'
+       const response = await selectDates_agenda(user_id,query);
         const data = response ? response: "NOT_FOUND"
         res.send({
             result:true,
