@@ -1,25 +1,54 @@
-import { hash } from "bcryptjs";
 import { Auth } from "../interfaces/auth.interface";
 import { User } from "../interfaces/user.interface";
-import UserModel from "../models/user";
 import { encrypt, verfied} from "../utils/bcrypt.handle";
 import { generateToken } from "../utils/jwt.handle";
 import {pool} from "../config/mysql"
+import { Res } from "../interfaces/response";
 
-const registerNewUser = async ({email,password,name,rol,lastname,second_lastname}:User) => {
+const registerNewUser = async ({email,password,name,rol,lastname,second_lastname}:User) : Promise<Res> => {
+    
+    let response:Res = {
+        result:false,
+        data:[],
+        message:''
+    }
+
     const checkIs = await getUserByEmail(email)
-    if (checkIs) return "ALREADY_USER";
+    if (checkIs){
+        response.result = false
+        response.message = 'EL USUARIO YA EXISTE'
+        return response
+    }
     const passHash = await encrypt(password);
-    const registerNewUser = await registerUser(email,passHash,name,rol,lastname,second_lastname);
-    return registerNewUser;
+    const registerNewUser = await insertUser(email,passHash,name,rol,lastname,second_lastname);
+
+    response.result = true
+    response.message = 'USUARIOR REGISTRADO  CON EXITO'
+    return response
 }
 
-const loginUser = async ({email,password}:Auth) => {
+const loginUser = async ({email,password}:Auth):Promise<Res> => {
+   
+    let response:Res = {
+        result:false,
+        data:[],
+        message:''
+    }
+
     const checkIs = await getUserByEmail(email)
-    if (!checkIs) return "NOT_FOUND_USER";
+    if (!checkIs){
+        response.result = false
+        response.message = 'USER NOT FOUND'
+        return response
+    }
+
     const passwordHash = checkIs.password; //Password encriptada desde BDD
     const isCorrect = await verfied(password,passwordHash);
-    if(!isCorrect) return  "PASSWORD_INCORRECT";    
+    if(!isCorrect){
+        response.result = false
+        response.message = 'PASSWORD INCORRECT'
+        return response
+    }   
     const token = generateToken(checkIs.email);
     const data = {
         token,
@@ -29,19 +58,20 @@ const loginUser = async ({email,password}:Auth) => {
             apellido_paterno: checkIs.lastname,
             apellido_materno: checkIs.second_lastname,
             rol: checkIs.rol,
-
-
-
         }
     }
-    return data;
+
+    response.result = true
+    response.message = 'LOGEO CORRECTO'
+    response.data =  data
+    return response
     /*
     */
 }
 
 async function getUserByEmail(email:string){
     try {
-        const [rows]:any =  await pool.query("SELECT * FROM usuarios WHERE usuario = ?" , [email])
+        const [rows]:any =  await pool.query("SELECT * FROM usuarios WHERE correo = ?" , [email])
         return rows[0]
     } catch (error) {
         console.log(error);
@@ -51,71 +81,80 @@ async function getUserByEmail(email:string){
    
 }
 
-async function registerUser(email:string,password:string,name:string,rol:string,lastname:string,second_lastname:string){
+async function insertUser(email:string,password:string,name:string,rol:string,lastname:string,second_lastname:string){
     try {
-        const [result] = await pool.query("INSERT INTO usuarios (id,nombre,usuario,password,rol,lastname,second_lastname) VALUES (?,?,?,?,?,?,?)",[null,name,email,password,rol,lastname,second_lastname])
+        const [result] = await pool.query("INSERT INTO usuarios (id,nombre,correo,password,rol,apellido_paterno,apellido_materno,estatus) VALUES (?,?,?,?,?,?,?,?)",[null,name,email,password,rol,lastname,second_lastname,true])
         return result
-        
     } catch (error) {
-        return false
+        console.log('ERROR AL INSERTAR LA INFORMACION DEL NUEVO USUARIO',error);
+    }
+}
+
+async function validateEmail(email:string) : Promise<Res>{
+   
+    let response:Res={
+        result: false,
+        data:[],
+        message:''
+    }
+
+    try {
+
+        const [select_user_result]:any = await pool.query('SELECT * FROM usuarios WHERE correo = ?',[email])
         
+        if (select_user_result[0] == null) {
+            response.message = "EL USUARIO NO ESTA REGISTRADO"
+            response.result = false
+            return response
+        }
+
+        response.message = "EL USUARIO ESTA REGISTRADO"
+        response.data =  select_user_result[0]
+        response.result = true
+
+        return response
+
+    } catch (error) {
+        response.message = "OCURRIO UN ERROR EL VALIDAR EL USUARIO"
+        response.data = error
+        response.result = false
+        return response
     }
-}
-
-async function validateEmail(email:string){
-    const [result]:any = await pool.query('SELECT * FROM usuarios WHERE usuario = ?',[email])
-    if (result[0] != null) {
-        return result[0]
-    }
-    return false
-
-    
-}
-
-async function setPassword(email:string,userId:number,newPassword:string){
-
-    const [select_user_result]:any = await pool.query('SELECT * FROM usuarios WHERE id = ?',[userId])
-    if (!select_user_result[0]) {
-        return
-    }
-
-    const [delete_user_result]:any = await pool.query('DELETE FROM usuarios WHERE id = ?',[userId])
-
-    const user_data = select_user_result[0]
-
-
-
-
-
-    let user_new_data:User =  {
-        name: user_data.nombre,
-        rol: user_data.rol,
-        password: newPassword,
-        description:  '',
-        email: user_data.usuario,
-        lastname:user_data.lastname,
-        second_lastname:user_data.second_lastname
-
-    }
-
-    const result_register_user:any = await registerNewUser(user_new_data)
-
 
 
     
-    if (result_register_user.affectedRows != 1) {
-        let response =  {
-            result:false,
-            message:"contraseña no modificada "
+} 
+
+async function setPassword(userId:number,newPassword:string) : Promise<Res>{
+
+    let response:Res = {
+        result: false,
+        message: '',
+        data: []
+    }
+
+    try {
+
+        const newPasswordHas = await encrypt(newPassword)
+        const [result]:any = await pool.query("UPDATE usuarios SET password = ? WHERE id = ?",[newPasswordHas,userId])
+        
+        if(!result.changedRows){
+            response.result = false,
+            response.message =  'No se actualizo la contrasenia'
+            return response
         }
+    
+        response.result = true
+        response.message = 'Contrasenia actualizada con exito'
         return response
-    }else{
-        let response =  {
-            result:true,
-            message:"contraseña modificada "
-        }
+
+    } catch (error) {
+        response.result = false
+        response.message = 'ERROR ACTUALIZAR LA CONTRASENIA'
+        response.data =  error
         return response
     }
+
 
     
     //const [delete_result]:any = await pool.query('DELETE FROM usuarios WHERE id = ?',[userId])

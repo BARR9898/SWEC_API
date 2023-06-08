@@ -1,7 +1,5 @@
 import { Request,response,Response } from "express"
 import { insertNota,selectNotes,selectNote, updateDate, deleteDate} from "../services/notas";
-import { handleHttp } from "../utils/error.handle";
-import ExpedienteModel from "../models/expediente";
 
 
 const postNota = async ({body} : Request,res:Response) => {

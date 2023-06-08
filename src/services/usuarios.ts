@@ -9,7 +9,7 @@ import {registerNewUser} from '../services/auth'
 
 const insertUsuario = async (usuario: any) => {
     const resulta_register_new_user = await registerNewUser(usuario)
-    if(resulta_register_new_user == 'ALREADY_USER'){
+    if(resulta_register_new_user.message == 'ALREADY_USER'){
         return  'ALREADY_USER'
     }else{
         return resulta_register_new_user

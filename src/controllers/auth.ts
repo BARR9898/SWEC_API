@@ -1,61 +1,51 @@
 import { Request,response,Response } from "express";
 import { registerNewUser,loginUser,validateEmail,setPassword} from "../services/auth";
 import mysql from "../config/mysql";
+import { handleError } from "../middleware/handleError";
 
 const registerController = async ({body} :Request,res:Response) => {
     try {
         const responseUser = await registerNewUser(body);        
         res.send(responseUser);
     } catch (e) {
-        res.status(500)
+        handleError('OCURRIO UN ERROR AL TRATAR DE REGISTRAR EL USUARIO')
     }
 
 }
 
 const loginController = async ({body}: Request,res:Response) => {
-    const {email,password} = body;
-    const responseUser = await loginUser({email,password});
-    if(responseUser === 'PASSWORD_INCORRECT'){
-       res.send(responseUser);
-    }else{
-        res.send(responseUser);
-
+    try {
+        const {email,password} = body;
+        const responseItem = await loginUser({email,password});
+        res.send(responseItem)
+    } catch (error) {
+        handleError('ERROR AL LOGEARSE')
     }
+
 }
 
 const existEmail = async({body}: Request,res:Response) => {
-    const {email} = body;
-    const emailExist = await validateEmail(email);
-    
-    if(emailExist == false){
-        res.send({
-           result:false
-        }) 
-        
-    }else{
-        res.send({
-            result: true,
-            data: emailExist
-        })
+    try {
+        const {email} = body;
+        const responseItem = await validateEmail(email);
+        res.send(responseItem)    
+    } catch (error) {
+        handleError('NO SE PUDO  VALIDAR SI EL USUARIO EXISTE PARA CAMBIAR LA CONTRASENIA')
     }
-
-
-
 
 }
 
 const resetPassword  =  async({body}: Request,res:Response) => {
-    const {email,userId,newPassword} = body;
-    const passwordWasSeted = await setPassword(email,userId,newPassword);
-    if(passwordWasSeted?.result){
-        res.send({
-            result:true
-        })
-    }else{
-        res.send({
-            result:false
-        })
+
+    try {
+        const {user_id,new_password} = body;
+        const responseItem = await setPassword(user_id,new_password);
+        res.send(responseItem)
+    } catch (error) {
+        handleError('ERROR AL CAMBIAR LA CONTRASENIA')
     }
+
+
     
     /*
     if(emailExist == false){
@@ -75,7 +65,5 @@ const resetPassword  =  async({body}: Request,res:Response) => {
 
 
 }
-
-
 
 export {loginController,registerController,existEmail,resetPassword}

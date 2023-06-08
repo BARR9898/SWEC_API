@@ -1,8 +1,9 @@
 import { Request,Response,Router } from "express";
-import { getExpediente , getExpedientes , updateExpediente , deleteExpediente , postExpediente,getNextId} from "../controllers/expedientes";
+import { getExpediente , getExpedientes  , deleteExpediente , postExpediente,getNextId} from "../controllers/expedientes";
 import { logMiddleware } from "../middleware/log";
 import { checkJWT } from "../middleware/session";
-
+import { createExpedientValidators,validateGetExpedientesFilter,validateGetExpediente,validateDeleteExpediente } from "../validators/expedientes";
+import { filtersValidations } from "../validators/filtros";
 const router = Router();
 
 /*
@@ -11,12 +12,11 @@ const router = Router();
 */
 
 
-router.get("/"  ,getExpedientes);
+router.get("/" , validateGetExpedientesFilter  ,getExpedientes);
 router.get("/getNextId"  ,getNextId);
-router.get("/:id" , logMiddleware, getExpediente);
-router.post("/" , postExpediente);
-router.put("/:id" , updateExpediente);
-router.delete("/:id" , deleteExpediente);
+router.get("/:id" , validateGetExpediente , logMiddleware, getExpediente);
+router.post("/" ,createExpedientValidators,filtersValidations,postExpediente);
+router.delete("/:id" ,validateDeleteExpediente, deleteExpediente);
 
 
 

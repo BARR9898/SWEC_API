@@ -1,19 +1,24 @@
 import { Request,response,Response } from "express"
-import { insertExpedient,deleteExpedient,getExpedient,getExpedients,updateExpedient,selectNextId} from "../services/expedientes";
+import { insertExpedient,deleteExpedient,getExpedient,getExpedients,selectNextId} from "../services/expedientes";
 import { handleHttp } from "../utils/error.handle";
-import ExpedienteModel from "../models/expediente";
 import { Res } from "../interfaces/response";
+import { FiltroInterface } from "../interfaces/filtros";
+import { handleError } from "../middleware/handleError";
 
 const getExpediente = async ({params} : Request,res:Response) => {
     try {
         const {id} = params;
-        const response = await getExpedient(id);
-        res.send(response);
+        const responseItem = await getExpedient(id);
+        if (!responseItem) {
+            res.send({
+                result:false,
+                message:'El expediente no fue encontrado',
+                data: []
+            })
+        }
+        res.send(responseItem);
     } catch (e) {
-        res.send({
-            result:false,
-            data:e
-        })
+        handleError('ERROR AL TRATAR DE OBTENER EL EXPEDIENTE')
     }
 
 }
@@ -21,17 +26,9 @@ const getExpediente = async ({params} : Request,res:Response) => {
 const getNextId = async (req: Request,res:Response) => {
     try {
         const response = await selectNextId();
-        const data = response ? response: "NOT_FOUND"
-        res.send({
-            result:true,
-            data:data,
-            status:200
-        });
+        res.send(response);
     } catch (e) {
-        res.send({
-            result:false,
-            data:e
-        })
+        handleError('ERROR AL TRATAR DE OBTENER EL PROXIMO ID')
     }
 
 }
@@ -39,48 +36,18 @@ const getNextId = async (req: Request,res:Response) => {
 const getExpedientes = async (req:Request,res:Response) => {
     try {
         const {query} = req
-        const response = await getExpedients(query);
+        let filtros:FiltroInterface  =  createFilters(query)        
+        const response = await getExpedients(filtros);
         res.send(response);
     } catch (e) {
-        res.send({
-            result:false,
-            data:e
-        })
+        handleError('ERROR AL OBETNER LOS EXPEDIENTES',res)
     }
 }
 
-const updateExpediente = async ( {params,body} :Request,res:Response) => {
-    try {
-        const {id} = params;
-        const response = await updateExpedient(id,body);
-        res.send({
-            result:true,
-            data:response,
-            status: 200
-        });
-    } catch (e) {
-        res.send({
-            result:true,
-            data: e
-        })
-    }
-}
-
-const postExpediente = async ({body,query} : Request,res:Response) => {
-        /*const isValidData = ValidateData(body);
-        
-        
-        if (!isValidData) {
-            res.send({
-                result:false,
-                data: "Información incompleta"
-            })
-        }*/
-        
-        const responseItem:Res = await insertExpedient(body,query)
+const postExpediente = async ({body,query} : Request,res:Response) => {  
+        let filtros = createFilters(query)      
+        const responseItem:Res = await insertExpedient(body,filtros)
         res.send(responseItem); 
-
-    
 }
 
 const deleteExpediente = async ({params} : Request,res:Response) => {
@@ -90,42 +57,58 @@ const deleteExpediente = async ({params} : Request,res:Response) => {
         res.send(responseItem); 
         
     } catch (e) {
-        res.send({
-            result:false,
-            data:e
-
-        })
+        handleError('ERROR AL ELIMINAR EL EXPEDEINTE',res)
     }
 }
 
+function createFilters(query:any) :  FiltroInterface{
 
-function ValidateData(data:any){
-    try {
-        if (!data.paciente.nombre || !data.paciente.nombre || !data.paciente.sexo
-            || !data.paciente.apellido_materno || !data.paciente.apellido_paterno
-            || !data.paciente.ocupacion || !data.paciente.ingresos_mensuales || !data.paciente.direccion
-            || !data.expediente.motivo_de_consulta || !data.expediente.circunstancias_de_aparicion
-            || !data.expediente.sintomas || !data.expediente.descripcion_fisica || !data.expediente.demanda_de_tratamiento
-            || !data.expediente.area_escolar || !data.expediente.area_laboral
-            || !data.expediente.acontecimientos_significativos || !data.expediente.desarrollo_psicosexual
-            || !data.expediente.familiograma || !data.expediente.area_de_relacion_y_familiar
-            || !data.expediente.mapeo_familiar || !data.expediente.impresion_diagnostica_de_familia
-            || !data.expediente.hipotesis_familiar || !data.expediente.examen_mental
-            || !data.expediente.indicaciones_diagnosticas || !data.expediente.impresiones_diagnosticas
-            || !data.expediente.modalidad_terapeutica || !data.expediente.objetivo_terapeutico 
-            || !data.expediente.estrategias_terapeuticas || !data.expediente.pronostico_terapeutico
-            || !data.expediente.foco  ) {
-            
-                return false
-        }
-        return true
-    } catch (error) {
-        console.log(error);
-        
+    let filtros:FiltroInterface = {
+        nombre: '',
+        apellido_paterno: '',
+        apellido_materno: '',
+        fecha_inicio: '',
+        fecha_fin: '',
+        estatus: '',
+        id_usuario: query.id_usuario
     }
 
+    switch (query.nombre) {
+        case '':
+            filtros.nombre = ''
+            break;
+    
+        default:
+            filtros.nombre = `AND paciente.nombre = '${query.nombre}' `
+            break;
+    }
+
+    switch (query.apellido_materno) {
+        case '':
+            filtros.apellido_materno = ''
+            break;
+    
+        default:
+            filtros.nombre = `AND paciente.apellido_materno = '${query.apellido_materno}' `
+            break;
+    }
+
+    switch (query.apellido_paterno) {
+        case '':
+            filtros.apellido_paterno = ''
+            break;
+    
+        default:
+            filtros.nombre = `AND paciente.apellido_paterno = '${query.apellido_paterno}' `
+            break;
+    }
+
+    return filtros
+    
 }
 
 
 
-export {getExpediente,getExpedientes,updateExpediente,deleteExpediente,postExpediente,getNextId}
+
+
+export {getExpediente,getExpedientes,deleteExpediente,postExpediente,getNextId}

@@ -1,5 +1,4 @@
 import { Request,Response,Router } from "express";
-import { getExpediente , getExpedientes , updateExpediente , deleteExpediente , postExpediente} from "../controllers/expedientes";
 import { postNota,getAllNotas,getNote,updateCita,deleteCita} from "../controllers/notas";
 
 import { logMiddleware } from "../middleware/log";

@@ -1,7 +1,5 @@
 import { Request,response,Response } from "express"
 import { insertCita,selectDates,selectDate, updateDate, deleteDate , selectDates_agenda} from "../services/citas";
-import { handleHttp } from "../utils/error.handle";
-import ExpedienteModel from "../models/expediente";
 import { Res } from "../interfaces/response";
 
 const postCita = async ({body} : Request,res:Response) => {

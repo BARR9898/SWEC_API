@@ -1,7 +1,5 @@
 import { Request,response,Response } from "express"
 import { insertUsuario,selectUsuarios,deleteUsuario,selectUsuario} from "../services/usuarios";
-import { handleHttp } from "../utils/error.handle";
-import ExpedienteModel from "../models/expediente";
 
 const postUsuario = async ({body} : Request,res:Response) => {
     /*const isValidData = ValidateData(body);
