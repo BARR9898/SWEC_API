@@ -5,6 +5,7 @@ import { postCita,getAllCitas,getCita,updateCita,deleteCita,getAllCitas_agenda} 
 import { logMiddleware } from "../middleware/log";
 import { checkJWT } from "../middleware/session";
 import { updateDate } from "../services/citas";
+import { getCitasValidatons,getCitasAgendaValidatons,createCitasValidations,deleteCitasValidatons,getDateValidations,updateCitasValidations} from "../validators/citas";
 
 const router = Router();
 
@@ -14,12 +15,12 @@ const router = Router();
 */
 
 
-router.get("/all/:id" , getAllCitas);
-router.get("/agenda/" , getAllCitas_agenda);
-router.get("/:id" , getCita);
-router.post("/" , postCita );
-router.put("/:id" , updateCita);
-router.delete("/:id" , deleteCita);
+router.get("/all",getCitasValidatons,getAllCitas);
+router.get("/agenda",getCitasAgendaValidatons,getAllCitas_agenda);
+router.get("/:id",getDateValidations,getCita);
+router.post("/",createCitasValidations,postCita );
+router.put("/:id",updateCitasValidations,updateCita);
+router.delete("/:id" ,deleteCitasValidatons,deleteCita);
 
 
 

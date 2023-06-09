@@ -6,4 +6,5 @@ export interface FiltroInterface {
     fecha_fin: string,
     estatus: string,
     id_usuario: string
+    asistencia?: string
 }
