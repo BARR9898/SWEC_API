@@ -1,9 +1,10 @@
 import { Request,Response,Router } from "express";
-import { postNota,getAllNotas,getNote,updateCita,deleteCita} from "../controllers/notas";
+import { postNota,getAllNotas,getNote} from "../controllers/notas";
 
 import { logMiddleware } from "../middleware/log";
 import { checkJWT } from "../middleware/session";
 import { updateDate } from "../services/citas";
+import { getNotasValidations,getNoteValidations,createNoteValidations } from "../validators/notas";
 
 const router = Router();
 
@@ -13,11 +14,9 @@ const router = Router();
 */
 
 
-router.get("/all/:id" , getAllNotas);
-router.get("/:id" , getNote);
-router.post("/" , postNota );
-router.put("/:id" , updateCita);
-router.delete("/:id" , deleteCita);
+router.get("/all/:id",getNotasValidations,getAllNotas);
+router.get("/:id",getNoteValidations,getNote);
+router.post("/",createNoteValidations,postNota );
 
 
 

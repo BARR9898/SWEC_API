@@ -83,7 +83,7 @@ function crearFiltrosCitas(query:any) : FiltroInterface {
             filtros.fecha_inicio  = ''
             break;
         default:
-            filtros.fecha_inicio  = `AND citas.fecha >= ${query.fecha_inicio}`
+            filtros.fecha_inicio  = `AND citas.fecha >= '${query.fecha_inicio}'`
             break;
     }
 
@@ -93,7 +93,7 @@ function crearFiltrosCitas(query:any) : FiltroInterface {
             filtros.fecha_fin  = ''
             break;
         default:
-            filtros.fecha_fin  = `AND citas.fecha <= ${query.fecha_fin}`
+            filtros.fecha_fin  = `AND citas.fecha <= '${query.fecha_fin}'`
             break;
     }
 
