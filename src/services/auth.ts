@@ -48,15 +48,15 @@ const loginUser = async ({email,password}:Auth):Promise<Res> => {
         response.result = false
         response.message = 'PASSWORD INCORRECT'
         return response
-    }   
+    }       
     const token = generateToken(checkIs.email);
     const data = {
         token,
         user: {
             id: checkIs.id,
             nombre: checkIs.nombre,
-            apellido_paterno: checkIs.lastname,
-            apellido_materno: checkIs.second_lastname,
+            apellido_paterno: checkIs.apellido_paterno,
+            apellido_materno: checkIs.apellido_materno,
             rol: checkIs.rol,
         }
     }

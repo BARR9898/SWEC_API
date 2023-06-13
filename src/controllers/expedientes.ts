@@ -79,7 +79,7 @@ function createFilters(query:any) :  FiltroInterface{
             break;
     
         default:
-            filtros.nombre = `AND paciente.nombre = '${query.nombre}' `
+            filtros.nombre = `AND p.nombre = '${query.nombre}' `
             break;
     }
 
@@ -89,7 +89,7 @@ function createFilters(query:any) :  FiltroInterface{
             break;
     
         default:
-            filtros.nombre = `AND paciente.apellido_materno = '${query.apellido_materno}' `
+            filtros.nombre = `AND p.apellido_materno = '${query.apellido_materno}' `
             break;
     }
 
@@ -99,7 +99,7 @@ function createFilters(query:any) :  FiltroInterface{
             break;
     
         default:
-            filtros.nombre = `AND paciente.apellido_paterno = '${query.apellido_paterno}' `
+            filtros.nombre = `AND p.apellido_paterno = '${query.apellido_paterno}' `
             break;
     }
 
