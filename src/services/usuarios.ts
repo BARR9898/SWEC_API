@@ -1,11 +1,12 @@
 
 
 import { Query, now } from "mongoose"
-import db from "../config/mysql"
+import db, { pool } from "../config/mysql"
 import { query } from "express"
 import { Request } from "express"
 import moment from "moment"
 import {registerNewUser} from '../services/auth'
+import { Res } from "../interfaces/response"
 
 const insertUsuario = async (usuario: any) => {
     const resulta_register_new_user = await registerNewUser(usuario)
@@ -31,56 +32,72 @@ const selectUsuario = async (id:string) => {
         
 }
 
-const deleteUsuario = async (id: any) => {
-
-    const [result_delete_terapeuta]:any = await db.pool.query('DELETE FROM usuarios WHERE id = ?',
-    [id])
-
-    if (!result_delete_terapeuta.affectedRows) {
-        return false
+const deleteUsuario = async (id: any) : Promise<Res> => {
+    let response:Res = {
+        result: false,
+        data: []
     }
+    try {
+        const [result_delete_terapeuta]:any = await db.pool.query('UPDATE usuarios SET estatus = ?  WHERE id = ?',
+        [0,id])
+    
+        if (!result_delete_terapeuta.affectedRows) {
+            response.result = false
+            response.data = []
+            response.message = 'El usuario no fue eliminado'
 
+        }
+    
+    
+        response.result = true
+        response.data = []
+        response.message = 'El usuario fue eliminado'
 
+        return response
+    } catch (error) {
+        response.result = false
+        response.data = error
+        response.message = 'ERROR AL ACTUALIZAR EL USUARIO'
+        return response
+    }   
 
-    return true
     
 }
 
-function createFilters(query:any){
-    let filters = {
-        desde: '',
-        hasta:'',
-        asistencia:''
-    }
+const updateUser = async (usuario:any,id:any): Promise<Res> => {
     
-    query.desde == null || query.desde == '' ? 
-       filters.desde = '' : filters.desde = `AND c.fecha >= '${query.desde}'`
-
-    query.hasta == null || query.hasta == '' ? 
-       filters.hasta = '' : filters.hasta = `AND c.fecha <= '${query.hasta}'`
-
-    switch (query.asistencia) {
-        case 'con asistencia':
-            filters.asistencia = `AND c.asistencia = true`
-            break;
-        case 'sin asistencia':
-            filters.asistencia = `AND c.asistencia = false`
-            break;
-        case 'pendientes':
-                filters.asistencia = `AND c.asistencia = -1`
-                break;
-        default:
-            filters.asistencia = ''
-
-            break;
+    let response:Res = {
+        result: false,
+        data: []
     }
 
+    try {
+        const {name,second_lastname,lastname,rol,email,estatus} = usuario
+        const [resulta_update_user]:any = await pool.query('UPDATE usuarios SET nombre = ?,apellido_paterno = ?,apellido_materno = ?,rol = ?,correo = ?, estatus = ? WHERE id = ?',[name,lastname,second_lastname,rol,email,estatus,id])
+        if (resulta_update_user.changedRows == 0) {
+            response.result = false
+            response.data = []
+            response.message = 'El usuario no fue actualizado'
 
-    return filters
-    
+        }
+
+        response.result = true
+        response.data = []
+        response.message = 'El usuario fue actualizado'
+
+        return response
+    } catch (error) {
+        response.result = false
+        response.data = error
+        response.message = 'ERROR AL ACTUALIZAR EL USUARIO'
+        return response
+    }
+
 }
 
 
 
 
-export { insertUsuario, selectUsuarios,deleteUsuario,selectUsuario}
+
+
+export { insertUsuario, selectUsuarios,deleteUsuario,selectUsuario,updateUser}

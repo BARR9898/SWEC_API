@@ -33,7 +33,6 @@ const getCitasAgendaValidatons = [
     .isString(),
     query('asistencia')
     .exists()
-    .notEmpty()
     .isString(),
     (req:Request,res:Response,next:NextFunction) => {
         handleValidator(req,res,next)

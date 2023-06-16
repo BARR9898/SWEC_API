@@ -42,6 +42,13 @@ const loginUser = async ({email,password}:Auth):Promise<Res> => {
         return response
     }
 
+    console.log('checkIs',checkIs);
+    
+    if (checkIs.estatus == 0) {
+        response.result = false
+        response.message = 'USUARIO INACTIVO'
+        return response
+    }
     const passwordHash = checkIs.password; //Password encriptada desde BDD
     const isCorrect = await verfied(password,passwordHash);
     if(!isCorrect){
@@ -104,6 +111,12 @@ async function validateEmail(email:string) : Promise<Res>{
         
         if (select_user_result[0] == null) {
             response.message = "EL USUARIO NO ESTA REGISTRADO"
+            response.result = false
+            return response
+        }
+
+        if (select_user_result[0].estatus == 0) {
+            response.message = "EL USUARIO ESTA DESACTIVADO"
             response.result = false
             return response
         }

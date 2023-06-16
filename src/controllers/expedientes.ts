@@ -40,12 +40,13 @@ const getExpedientes = async (req:Request,res:Response) => {
         const response = await getExpedients(filtros);
         res.send(response);
     } catch (e) {
-        handleError('ERROR AL OBETNER LOS EXPEDIENTES',res)
+        handleError(`ERROR AL OBETNER LOS EXPEDIENTES - ${e}`,res)
     }
 }
 
 const postExpediente = async ({body,query} : Request,res:Response) => {  
-        let filtros = createFilters(query)      
+        let filtros = createFilters(query) 
+             
         const responseItem:Res = await insertExpedient(body,filtros)
         res.send(responseItem); 
 }

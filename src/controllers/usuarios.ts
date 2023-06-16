@@ -1,5 +1,6 @@
 import { Request,response,Response } from "express"
-import { insertUsuario,selectUsuarios,deleteUsuario,selectUsuario} from "../services/usuarios";
+import { insertUsuario,selectUsuarios,deleteUsuario,selectUsuario,updateUser} from "../services/usuarios";
+import { handleError } from "../middleware/handleError";
 
 const postUsuario = async ({body} : Request,res:Response) => {
     /*const isValidData = ValidateData(body);
@@ -34,29 +35,24 @@ const postUsuario = async ({body} : Request,res:Response) => {
     }
 }
 
+const updateUsuario = async ({body,params} : Request,res:Response) => {
+    try {
+        const {id} = params
+        const responseItem = await updateUser(body,id);
+        res.send(responseItem) 
+    } catch (error) {
+        handleError(`ERROR AL ACTUALIZAR EL USUARIO - ${error}`)
+    }
+
+}
+
 const removeUsuario = async ({params} : Request,res:Response) => {
     try {
         const {id} = params;
         const responseItem = await deleteUsuario(id);
-        if(responseItem){
-            res.send({
-                result:true,
-                data:responseItem,
-                stauts:200
-            });
-        }else{
-            res.send({
-                result:false
-            }); 
-        }
-
-        
+        res.send(responseItem)
     } catch (e) {
-        res.send({
-            result:false,
-            data:e
-
-        })
+        handleError(`ERROR AL TRATAR DE ELIMINAR EL USUARIO - ${e}`)
     }
 }
 
@@ -120,4 +116,4 @@ const updateCita = async ({params,body} : Request,res:Response) => {
 
 }*/
 
-export {postUsuario,getAllUsuarios,removeUsuario,getUsuario}
+export {postUsuario,getAllUsuarios,removeUsuario,getUsuario,updateUsuario}

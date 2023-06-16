@@ -1,5 +1,5 @@
 import { Request,Response,Router } from "express";
-import { getAllUsuarios , postUsuario,removeUsuario,getUsuario } from "../controllers/usuarios";
+import { getAllUsuarios , postUsuario,removeUsuario,getUsuario,updateUsuario} from "../controllers/usuarios";
 import { logMiddleware } from "../middleware/log";
 import { checkJWT } from "../middleware/session";
 
@@ -15,6 +15,7 @@ router.get("/"  ,getAllUsuarios);
 router.post("/" , postUsuario);
 router.delete("/:id" , removeUsuario);
 router.get("/:id" , getUsuario);
+router.put("/:id" , updateUsuario);
 
 
 export {router};

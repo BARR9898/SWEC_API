@@ -15,7 +15,7 @@ const router = Router();
 router.get("/" , validateGetExpedientesFilter  ,getExpedientes);
 router.get("/getNextId"  ,getNextId);
 router.get("/:id" , validateGetExpediente , logMiddleware, getExpediente);
-router.post("/" ,createExpedientValidators,filtersValidations,postExpediente);
+router.post("/" ,createExpedientValidators,postExpediente);
 router.delete("/:id" ,validateDeleteExpediente, deleteExpediente);
 
 

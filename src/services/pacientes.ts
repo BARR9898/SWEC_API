@@ -10,9 +10,10 @@ async function insertPaciente(patient: any , usuario_id:any) : Promise<Res> {
     }
 
     try {
-        const { nombre, apellido_materno, apellido_paterno, edad, sexo, direccion, ingresos_mensuales, ocupacion ,  estatus} = patient
+        
+        const { nombre, apellido_materno, apellido_paterno, edad, sexo, direccion, ingresos_mensuales, ocupacion } = patient
         const [result_insert_paciente]: any = await db.pool.query("INSERT INTO pacientes (id,nombre,apellido_materno,apellido_paterno,edad,sexo,direccion,ingresos_mensuales,ocupacion,id_usuario,estatus) VALUES (?,?,?,?,?,?,?,?,?,?,?)",
-            [null, nombre, apellido_materno, apellido_paterno, edad, sexo, direccion, ingresos_mensuales, ocupacion,usuario_id,  estatus])
+            [null, nombre, apellido_materno, apellido_paterno, edad, sexo, direccion, ingresos_mensuales, ocupacion,usuario_id,true])
         if (!result_insert_paciente.affectedRows) {
             response.result =  false,
             response.data = []

@@ -100,6 +100,8 @@ const selectDates = async (filtros:FiltroInterface) : Promise<Res> =>  {
 
 const selectDates_agenda = async (filtros:FiltroInterface) : Promise<Res> => {
  
+    console.log('Filtros',filtros);
+    
     let response:Res = {
         result:false,
         data: [],
